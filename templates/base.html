@@ -35,31 +35,45 @@
       </li>
 
       <li class="nav-item">
-        <a class="nav-link" href="/patients">Patients</a>
+        <a class="nav-link" href="/patients">Patients Booking</a>
       </li>
 
       <li class="nav-item">
         <a class="nav-link" href="/bookings">Booking Details</a>
       </li>
       
-      <li class="nav-item">
-        <a class="nav-link" href="/test"> TEST</a>
-      </li>
+      
       
    
 
+
+    {% if current_user.is_authenticated %}
+
       <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-expanded="false">
+          Welcome {{ current_user.username }}
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          
+          <a class="dropdown-item" href="/logout">Logout </a>
+        </div>
+      </li>
+
+     {% else %}
+
+     <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-expanded="false">
           Aunthetication
         </a>
         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
           <a class="dropdown-item" href="/signup">Sign-up</a>
           <a class="dropdown-item" href="/login"> Login</a>
-          <div class="dropdown-divider"></div>
-          <a class="dropdown-item" href="/logout">Logout </a>
+          
         </div>
       </li>
-     
+
+    {% endif %}
+
     </ul>
     <form class="form-inline my-2 my-lg-0">
       <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
