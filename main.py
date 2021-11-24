@@ -4,6 +4,13 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, login_manager, LoginManager
 from flask_login import login_required, current_user
+from flask_mail import Mail, Message
+import json
+
+
+with open('config.json', 'r') as c:
+    params = json.load(c)["params"]
+
 
 
 # my dbms connection
@@ -12,10 +19,21 @@ app = Flask(__name__)
 app.secret_key = 'anand'
 
 
+
+
 # this for geeting user access
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
+# SMTP MAIL SERVER SETTINGS
+app.config.update(
+    MAIL_SERVER='smtp.gmail.com',
+    MAIL_PORT='465',
+    MAIL_USE_SSL=True,
+    MAIL_USERNAME=params['gmail-user'],
+    MAIL_PASSWORD=params['gmail-password']
+)
+mail = Mail(app)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -41,7 +59,6 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(1000))
 
 
-
 class Patients(db.Model):
     pid=db.Column(db.Integer,primary_key=True)
     email=db.Column(db.String(50))
@@ -54,7 +71,11 @@ class Patients(db.Model):
     dept=db.Column(db.String(50))
     number=db.Column(db.String(50))
 
-
+class Doctors(db.Model):
+    did=db.Column(db.Integer,primary_key=True)
+    email=db.Column(db.String(50))
+    doctorname=db.Column(db.String(50))
+    dept=db.Column(db.String(50))
 
 
 
@@ -76,14 +97,25 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/doctors')
+@app.route('/doctors',methods=['POST','GET'])
 def doctors():
+
+    if request.method=="POST":
+        email=request.form.get('email')
+        doctorname=request.form.get('doctorname')
+        dept=request.form.get('dept')
+
+        query=db.engine.execute(f"INSERT INTO `doctors` (`email`,`doctorname`,`dept`) VALUES ('{email}','{doctorname}','{dept}')")
+        flash("Information is Stored","primary")
     return render_template('doctor.html')
+
 
 
 @app.route('/patients', methods=['POST', 'GET'])
 @login_required
 def patients():
+    doct=db.engine.execute("SELECT * FROM `doctors`")
+
     if request.method == 'POST':
         email=request.form.get('email')
         name=request.form.get('name')
@@ -94,14 +126,21 @@ def patients():
         date=request.form.get('date')
         dept=request.form.get('dept')
         number=request.form.get('number')
-
+        subject="HOSPITAL MANAGEMENT SYSTEM"
         query=db.engine.execute(f"INSERT INTO `patients` (`email`,`name`,`gender`,`slot`,`disease`,`time`,`date`,`dept`,`number`) VALUES ('{email}','{name}','{gender}','{slot}','{disease}','{time}','{date}','{dept}','{number}')")
+        
+        # mail starts from here
+        # mail.send_message(subject, sender=params['gmail-user'], recipients=[email],body=f"YOUR bOOKING IS CONFIRMED THANKS FOR CHOOSING US \nYour Entered Details are :\nName: {name}\nSlot: {slot}")
+
+
+        
+        
         flash("Booking Confirmed","info")
 
 
 
 
-    return render_template('patient.html')
+    return render_template('patient.html',doct=doct)
 
 
 
